@@ -1,6 +1,15 @@
 /** User class for message.ly */
+const db = require("../db")
+const { authenticateJWT,
+  ensureLoggedIn,
+  ensureCorrectUser
+} = require("../middleware/auth")
+const bcrypt = require("bcrypt")
 
 
+const ds = '2013-03-15 08:50:00';
+const day = new Date(ds.replace(' ', 'T') + 'Z');
+day.toUTCString()
 
 /** User of the site. */
 
@@ -10,20 +19,43 @@ class User {
    *    {username, password, first_name, last_name, phone}
    */
 
-  static async register({username, password, first_name, last_name, phone}) { }
+  static async register({ username, password, first_name, last_name, phone }) {
+    let result = await db.query(
+      `INSERT INTO users (username, password, first_name, last_name, phone, join_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING username, password, first_name, last_name, phone`,
+      [username, password, first_name, last_name, phone, day]);
+    return result.rows[0]
+  }
 
   /** Authenticate: is this username/password valid? Returns boolean. */
 
-  static async authenticate(username, password) { }
+  static async authenticate(username, password) {
+    let userInfo = await db.query(
+      `SELECT username, password
+      FROM users
+      WHERE username = $1`,
+      [username]
+    )
+    if (await bcrypt.compare(password, userInfo.rows[0].password)) {
+      return true
+    } else {
+      return false
+    }
+  }
 
   /** Update last_login_at for user */
 
-  static async updateLoginTimestamp(username) { }
+  static async updateLoginTimestamp(username) {
+
+  }
 
   /** All: basic info on all users:
    * [{username, first_name, last_name, phone}, ...] */
 
-  static async all() { }
+  static async all() {
+
+  }
 
   /** Get: get user by username
    *
@@ -34,7 +66,9 @@ class User {
    *          join_at,
    *          last_login_at } */
 
-  static async get(username) { }
+  static async get(username) {
+
+  }
 
   /** Return messages from this user.
    *
@@ -44,7 +78,9 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesFrom(username) { }
+  static async messagesFrom(username) {
+
+  }
 
   /** Return messages to this user.
    *
@@ -54,7 +90,9 @@ class User {
    *   {id, first_name, last_name, phone}
    */
 
-  static async messagesTo(username) { }
+  static async messagesTo(username) {
+
+  }
 }
 
 
