@@ -15,7 +15,7 @@ router.post("/login", async function (req, res, next) {
   try {
     const { username, password } = req.body;
     if (await User.authenticate(username, password)) {
-      console.log(username)
+      console.log("This is the req.body", req.body)
       payload = {username}
       let token = jwt.sign(payload, SECRET_KEY)
       return res.json(token)
@@ -47,9 +47,10 @@ router.post("/register", async function (req, res, next) {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     let userData = await User.register({ username, password: hashedPassword, first_name, last_name, phone })
-
     // return res.json(userData)
-    res.redirect("/login", userData)
+    payload = {username: userData.username}
+    let token = jwt.sign(payload, SECRET_KEY)
+    return res.json(token)
 
   } catch (err) {
     return next(err)
