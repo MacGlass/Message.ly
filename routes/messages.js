@@ -1,4 +1,11 @@
+const express = require("express");
+const Message = require("../models/message");
+const router = express.Router();
+const auth = require("../middleware/auth");
+
 /** GET /:id - get detail of message.
+ * 
+ * 
  *
  * => {message: {id,
  *               body,
@@ -11,7 +18,21 @@
  *
  **/
 
+router.get('/:id', auth.authenticateJWT, async function (req, res, next) {
+  try {
+    let id = req.params.id;
+    let currentUser = req.user.username
+    message = await Message.get(id)
+    let toUser = message.to_user.username
+    let fromUser = message.from_user.username
 
+    if (currentUser === toUser || currentUser === fromUser) {
+      return res.json(message)
+    }
+  } catch (err) {
+    return next(err);
+  }
+})
 /** POST / - post message.
  *
  * {to_username, body} =>
@@ -19,6 +40,16 @@
  *
  **/
 
+router.post("/", auth.authenticateJWT, async function (req, res, next) {
+  try {
+    let from_username = req.user.username
+    let { to_username, body } = req.body;
+    let result = await Message.create({ from_username, to_username, body })
+    return res.json({ message: result })
+  } catch (err) {
+    return next(err);
+  }
+})
 
 /** POST/:id/read - mark message as read:
  *
@@ -28,3 +59,19 @@
  *
  **/
 
+router.post("/:id/read", auth.authenticateJWT, async function (req, res, next) {
+  try {
+    let id = req.params.id;
+    let currentUser = req.user.username
+    message = await Message.markRead(id)
+    let toUser = message.to_username
+    if (currentUser === toUser){
+      return res.json(message)
+    }
+  } catch (err) {
+    return next(err);
+  }
+})
+
+
+module.exports = router;

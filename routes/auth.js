@@ -2,8 +2,7 @@ const express = require("express");
 const User = require("../models/user");
 const ExpressError = require("../expressError")
 const router = express.Router();
-const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require("../config")
-const bcrypt = require("bcrypt")
+const { SECRET_KEY } = require("../config")
 const jwt = require("jsonwebtoken");
 
 /** POST /login - login: {username, password} => {token}
@@ -14,13 +13,18 @@ const jwt = require("jsonwebtoken");
 router.post("/login", async function (req, res, next) {
   try {
     const { username, password } = req.body;
-    if (await User.authenticate(username, password)) {
-      console.log("This is the req.body", req.body)
-      payload = {username}
-      let token = jwt.sign(payload, SECRET_KEY)
-      return res.json(token)
-    } else {
-      throw new ExpressError("Invalid username or password", 401)
+    if (await User.get(username)) {
+      if (await User.authenticate(username, password)) {
+        console.log("This is the req.body", req.body)
+        payload = { username }
+        let token = jwt.sign(payload, SECRET_KEY)
+        return res.json({ token })
+      } else {
+        throw new ExpressError("Invalid username or password", 400)
+      } 
+    }
+    else {
+      throw new ExpressError("Invalid username or password", 400)
     }
   } catch (err) {
     return next(err)
@@ -44,13 +48,11 @@ router.post("/register", async function (req, res, next) {
       phone
     } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+    let userData = await User.register({ username, password, first_name, last_name, phone })
 
-    let userData = await User.register({ username, password: hashedPassword, first_name, last_name, phone })
-    // return res.json(userData)
-    payload = {username: userData.username}
+    payload = { username: userData.username }
     let token = jwt.sign(payload, SECRET_KEY)
-    return res.json(token)
+    return res.json({ token })
 
   } catch (err) {
     return next(err)

@@ -1,10 +1,7 @@
 const express = require("express");
 const User = require("../models/user");
-const authRoutes = require("../routes/auth");
-const ExpressError = require("../expressError")
 const router = express.Router();
-const { BCRYPT_WORK_FACTOR, SECRET_KEY } = require("../config")
-const bcrypt = require("bcrypt")
+const { SECRET_KEY } = require("../config")
 const jwt = require("jsonwebtoken");
 const auth = require("../middleware/auth");
 
@@ -19,7 +16,6 @@ router.get('/', auth.ensureLoggedIn, async function (req, res, next) {
     const tokenFromBody = req.body._token;
     jwt.verify(tokenFromBody, SECRET_KEY);
     let allUsers = await User.all();
-    console.log("From users route----> ", allUsers)
     return res.json({users: allUsers})
   } catch (err) {
     return next(err);
@@ -37,7 +33,6 @@ router.get('/:username', auth.ensureLoggedIn, auth.ensureCorrectUser, async func
     const username = req.params.username;
     jwt.verify(tokenFromBody, SECRET_KEY);
     let userFromDB = await User.get(username);
-    console.log("From get one user route----> ", userFromDB)
     return res.json({user: userFromDB})
   } catch (err) {
     return next(err);
@@ -60,7 +55,6 @@ router.get('/:username/to', auth.ensureLoggedIn, auth.ensureCorrectUser, async f
     const username = req.params.username;
     jwt.verify(tokenFromBody, SECRET_KEY);
     let messagesFromDB = await User.messagesTo(username);
-    console.log("From get messages to user route----> ", messagesFromDB)
     return res.json({messages: messagesFromDB})
   } catch (err) {
     return next(err);
@@ -84,7 +78,6 @@ router.get('/:username/from', auth.ensureLoggedIn, auth.ensureCorrectUser, async
     const username = req.params.username;
     jwt.verify(tokenFromBody, SECRET_KEY);
     let messagesFromDB = await User.messagesFrom(username);
-    console.log("From get messages to user route----> ", messagesFromDB)
     return res.json({messages: messagesFromDB})
   } catch (err) {
     return next(err);

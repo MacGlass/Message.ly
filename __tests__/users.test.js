@@ -3,6 +3,8 @@ const User = require("../models/user");
 const Message = require("../models/message");
 
 
+
+
 describe("Test User class", async function () {
   beforeEach(async function () {
     await db.query("DELETE FROM messages");

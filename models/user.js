@@ -1,10 +1,8 @@
 /** User class for message.ly */
 const db = require("../db")
-const { authenticateJWT,
-  ensureLoggedIn,
-  ensureCorrectUser
-} = require("../middleware/auth")
+
 const bcrypt = require("bcrypt")
+const { BCRYPT_WORK_FACTOR } = require("../config")
 
 
 const ds = '2013-03-15 08:50:00';
@@ -20,11 +18,14 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+
     let result = await db.query(
       `INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
       VALUES ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
       RETURNING username, password, first_name, last_name, phone`,
-      [username, password, first_name, last_name, phone]);
+      [username, hashedPassword, first_name, last_name, phone]);
     return result.rows[0]
   }
 
@@ -37,6 +38,7 @@ class User {
       WHERE username = $1`,
       [username]
     )
+
     if (await bcrypt.compare(password, userInfo.rows[0].password)) {
       this.updateLoginTimestamp(username)
       return true
@@ -60,10 +62,9 @@ class User {
 
   static async all() {
     let allUsers = await db.query(
-      `SELECT username, first_name, last_name, phone
+      `SELECT username, first_name, last_name
       FROM users`
     );
-    console.log("From models ---->", allUsers.rows)
     return allUsers.rows
   }
 
@@ -83,8 +84,7 @@ class User {
       WHERE username = $1`,
       [username]
     );
-    console.log("From models ---->", user.rows[0])
-    return user.rows
+    return user.rows[0]
   }
 
   /** Return messages from this user.
