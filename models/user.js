@@ -100,11 +100,11 @@ class User {
       `SELECT m.id, m.body, m.sent_at, m.read_at, u.username, u.first_name, u.last_name, u.phone
       FROM messages AS m
       JOIN users AS u
-      ON m.from_username = u.username
-      WHERE m.to_username = $1`,
+      ON m.to_username = u.username
+      WHERE m.from_username = $1`,
       [username]
     );
-    console.log("messages: ", messages)
+
     let formattedMessages = messages.rows.map(row => {
       return {
         id: row.id,
@@ -119,7 +119,7 @@ class User {
         }
       }
     })
-    console.log("From models ---->", formattedMessages)
+
     return formattedMessages;
 
   }
@@ -138,11 +138,11 @@ class User {
       `SELECT m.id, m.body, m.sent_at, m.read_at, u.username, u.first_name, u.last_name, u.phone
       FROM messages AS m
       JOIN users AS u
-      ON m.to_username = u.username
-      WHERE m.from_username = $1`,
+      ON m.from_username = u.username
+      WHERE m.to_username = $1`,
       [username]
     );
-    console.log("messages: ", messages)
+
     let formattedMessages = messages.rows.map(row => {
       return {
         id: row.id,
@@ -157,7 +157,7 @@ class User {
         }
       }
     })
-    console.log("From models ---->", formattedMessages)
+
     return formattedMessages;
   }
 }
